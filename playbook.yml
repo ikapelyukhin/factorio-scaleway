@@ -1,0 +1,29 @@
+---
+- name: Provision Factorio server
+  hosts: all
+  remote_user: root
+  gather_facts: no
+  tasks:
+    - name: set server directory
+      set_fact:
+        factorio_server_dir: /root/factorio
+
+    - name: Unarchive a file that is already on the remote machine
+      unarchive:
+        src: https://www.factorio.com/get-download/stable/headless/linux64
+        dest: /root
+        remote_src: yes
+    
+    - name: get file stat to be able to perform a check in the following task
+      local_action: stat path=factorio_save.zip
+      register: file
+
+    - name: copy file if it exists
+      copy: src=factorio_save.zip dest=/root/factorio-save.zip
+      when: file.stat.exists
+      
+    - name: create stuff when it doesn't exist
+      shell: /root/factorio/bin/x64/factorio --create /root/factorio-save.zip
+      when: file.stat.exists is false
+
+        
